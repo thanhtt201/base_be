@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const verifyToken = require("../middleware/verifyToken");
 
 router.post("/register", (req, res) => {
+	console.log('body', req.body)
 	const { email, password } = req.body;
 	const newUser = new User({
 		email,
@@ -36,7 +37,13 @@ router.post("/login", async (req, res) => {
 	const refreshToken = jwt.sign({ email }, "thanh2k1_refresh", {
 		expiresIn: "10h",
 	});
-	res.cookie("refresh-token", refreshToken);
+	// document.cookie=`refresh-token=${refreshToken}`
+	res.cookie("refresh-token", refreshToken, {
+		httpOnly: true,
+		secure:false,
+		path: "/",
+		sameSite: "strict",
+	});
 	res.status(200).json({
 		data: {
 			user: emailFound,
@@ -47,10 +54,11 @@ router.post("/login", async (req, res) => {
 	});
 });
 
-router.post("/refresh-token", async (req, res) => {
+router.get("/refresh-token", async (req, res) => {
 	const getRefreshTokenCookie = req.cookies["refresh-token"];
+	console.log('refreshtokenfff', req.cookies["refresh-token"])
 	if (!getRefreshTokenCookie) {
-		return res.status(401).send("Không tìm thấy token");
+		return res.status(401).send("Không tìm thấy refresh-token");
 	}
     try {
         const decodedRefreshToken = jwt.verify(
@@ -68,7 +76,12 @@ router.post("/refresh-token", async (req, res) => {
         const refreshToken = jwt.sign({ email }, "thanh2k1_refresh", {
             expiresIn: "10h",
         });
-        res.cookie("refresh-token", refreshToken);
+        res.cookie("refresh-token", refreshToken, {
+			httpOnly: true,
+			secure:false,
+			path: "/",
+			sameSite: "strict",
+		});
         res.status(200).json({
             data: {
                 user: emailFound,
